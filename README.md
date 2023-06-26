@@ -83,11 +83,11 @@ the "Answer board" below:
 Answer board:
 
 ```
- - | - | - 
+ O | - | O 
 ___|___|___
- - | - | - 
+ - | X | - 
 ___|___|___
- - | - | - 
+ X | X | O 
 ```
 
 After you've answered look for a fellow fellow near you and discuss your
@@ -212,7 +212,7 @@ contain the "game server" that you can use to spectate your games!
 You can run the game server by running the `./run-game-server.sh` script:
 
 ```
-tictactoe$ ./run-game-server.sh -port 8181
+tictactoe$ .-/run-game-server.sh -port 8181
 Game server running on port 8181
 ```
 
