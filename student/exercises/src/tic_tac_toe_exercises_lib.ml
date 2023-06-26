@@ -88,9 +88,17 @@ let available_moves
 let evaluate ~(game_kind : Game_kind.t) ~(pieces : Piece.t Position.Map.t)
   : Evaluation.t
   =
-  ignore pieces;
-  ignore game_kind;
-  failwith "Implement me!"
+  match game_kind with
+  | Tic_tac_toe -> 
+    (Map.iteri pieces ~f: fun ~key ~data -> (
+      if (Piece.equal data (Map.find pieces (Map.left key))) 
+      then  data
+      else Game_continues));
+      Game_continues
+  | Omok -> Game_continues
+  | _ -> Illegal_state
+  ;
+
 ;;
 
 (* Exercise 3. *)
@@ -224,8 +232,8 @@ let%expect_test "yes available_moves" =
   print_s [%sexp (moves : Position.t list)];
   [%expect
     {| 
-    (((row 0) (column 1)) ((row 0) (column 2)) ((row 1)
-   (column 1)) ((row 1) (column 2)) ((row 2) (column 1))) |}]
+   (((row 0) (column 1)) ((row 0) (column 2)) ((row 1) (column 1))
+    ((row 1) (column 2)) ((row 2) (column 1))) |}]
 ;;
 
 let%expect_test "no available_moves" =
