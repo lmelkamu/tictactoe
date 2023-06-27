@@ -14,9 +14,12 @@ let random_move_strategy
   ~(pieces : Piece.t Position.Map.t)
   : Position.t
   =
-  match Tic_tac_toe_exercises_lib.available_moves ~game_kind ~pieces with
-  | [] -> failwith "No moves"
-  | _ ->
+  match
+    List.is_empty
+      (Tic_tac_toe_exercises_lib.available_moves ~game_kind ~pieces)
+  with
+  | true -> failwith "No moves"
+  | false ->
     List.random_element_exn
       (Tic_tac_toe_exercises_lib.available_moves ~game_kind ~pieces)
 ;;

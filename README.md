@@ -212,7 +212,7 @@ contain the "game server" that you can use to spectate your games!
 You can run the game server by running the `./run-game-server.sh` script:
 
 ```
-tictactoe$ .-/run-game-server.sh -port 8181
+tictactoe$ ./run-game-server.sh -port 8181
 Game server running on port 8181
 ```
 
