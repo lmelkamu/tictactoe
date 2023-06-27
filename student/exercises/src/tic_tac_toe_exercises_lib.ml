@@ -88,17 +88,17 @@ let available_moves
 let evaluate ~(game_kind : Game_kind.t) ~(pieces : Piece.t Position.Map.t)
   : Evaluation.t
   =
+  let x_map = Map.filter pieces ~f:(fun v -> Piece.equal v Piece.X) in
+  let o_map = Map.filter pieces ~f:(fun v -> Piece.equal v Piece.O) in
   match game_kind with
   | Tic_tac_toe ->
-    let x_map = Map.filter pieces ~f:(fun v -> Piece.equal v Piece.X) in
-    let o_map = Map.filter pieces ~f:(fun v -> Piece.equal v Piece.O) in
     let horizontal map key data =
       match
         Map.find map (Position.left key), Map.find map (Position.right key)
       with
       (*If both exists, check if equal, else continue checking*)
-      | Some piece1, Some piece2 ->
-        if Piece.equal piece1 data && Piece.equal piece2 data
+      | Some piece_1, Some piece_2 ->
+        if Piece.equal piece_1 data && Piece.equal piece_2 data
         then true
         else false
       | _, _ -> false
@@ -108,8 +108,8 @@ let evaluate ~(game_kind : Game_kind.t) ~(pieces : Piece.t Position.Map.t)
         Map.find map (Position.up key), Map.find map (Position.down key)
       with
       (*If both exists, check if equal, else continue checking*)
-      | Some piece1, Some piece2 ->
-        if Piece.equal piece1 data && Piece.equal piece2 data
+      | Some piece_1, Some piece_2 ->
+        if Piece.equal piece_1 data && Piece.equal piece_2 data
         then true
         else false
       | _, _ -> false
@@ -120,8 +120,8 @@ let evaluate ~(game_kind : Game_kind.t) ~(pieces : Piece.t Position.Map.t)
         , Map.find map (Position.down (Position.right key)) )
       with
       (*If both exists, check if equal, else continue checking*)
-      | Some piece1, Some piece2 ->
-        if Piece.equal piece1 data && Piece.equal piece2 data
+      | Some piece_1, Some piece_2 ->
+        if Piece.equal piece_1 data && Piece.equal piece_2 data
         then true
         else false
       | _, _ -> false
@@ -132,8 +132,8 @@ let evaluate ~(game_kind : Game_kind.t) ~(pieces : Piece.t Position.Map.t)
         , Map.find map (Position.down (Position.left key)) )
       with
       (*If both exists, check if equal, else continue checking*)
-      | Some piece1, Some piece2 ->
-        if Piece.equal piece1 data && Piece.equal piece2 data
+      | Some piece_1, Some piece_2 ->
+        if Piece.equal piece_1 data && Piece.equal piece_2 data
         then true
         else false
       | _, _ -> false
@@ -154,7 +154,100 @@ let evaluate ~(game_kind : Game_kind.t) ~(pieces : Piece.t Position.Map.t)
     else if is_Win o_map
     then Evaluation.Game_over { winner = Some Piece.O }
     else Game_continues
-  | Omok -> Game_continues (* | _ -> Illegal_state *)
+  | Omok ->
+    let horizontal map key data =
+      match
+        ( Map.find map (Position.left key)
+        , Map.find map (Position.left (Position.left key))
+        , Map.find map (Position.right key)
+        , Map.find map (Position.right (Position.right key)) )
+      with
+      (*If both exists, check if equal, else continue checking*)
+      | Some piece_1, Some piece_2, Some piece_3, Some piece_4 ->
+        if Piece.equal piece_1 data
+           && Piece.equal piece_2 data
+           && Piece.equal piece_3 data
+           && Piece.equal piece_4 data
+        then true
+        else false
+      | _, _, _, _ -> false
+    in
+    let vertical map key data =
+      match
+        ( Map.find map (Position.up key)
+        , Map.find map (Position.up (Position.up key))
+        , Map.find map (Position.down key)
+        , Map.find map (Position.down (Position.down key)) )
+      with
+      (*If both exists, check if equal, else continue checking*)
+      | Some piece_1, Some piece_2, Some piece_3, Some piece_4 ->
+        if Piece.equal piece_1 data
+           && Piece.equal piece_2 data
+           && Piece.equal piece_3 data
+           && Piece.equal piece_4 data
+        then true
+        else false
+      | _, _, _, _ -> false
+    in
+    let diagonal1 map key data =
+      match
+        ( Map.find map (Position.up (Position.left key))
+        , Map.find
+            map
+            (Position.up (Position.up (Position.left (Position.left key))))
+        , Map.find map (Position.down (Position.right key))
+        , Map.find
+            map
+            (Position.down
+               (Position.down (Position.right (Position.right key)))) )
+      with
+      (*If both exists, check if equal, else continue checking*)
+      | Some piece_1, Some piece_2, Some piece_3, Some piece_4 ->
+        if Piece.equal piece_1 data
+           && Piece.equal piece_2 data
+           && Piece.equal piece_3 data
+           && Piece.equal piece_4 data
+        then true
+        else false
+      | _, _, _, _ -> false
+    in
+    let diagonal2 map key data =
+      match
+        ( Map.find map (Position.up (Position.right key))
+        , Map.find
+            map
+            (Position.up (Position.up (Position.right (Position.right key))))
+        , Map.find map (Position.down (Position.left key))
+        , Map.find
+            map
+            (Position.down
+               (Position.down (Position.left (Position.left key)))) )
+      with
+      (*If both exists, check if equal, else continue checking*)
+      | Some piece_1, Some piece_2, Some piece_3, Some piece_4 ->
+        if Piece.equal piece_1 data
+           && Piece.equal piece_2 data
+           && Piece.equal piece_3 data
+           && Piece.equal piece_4 data
+        then true
+        else false
+      | _, _, _, _ -> false
+    in
+    let is_Win map =
+      Map.existsi map ~f:(fun ~key ~data ->
+        if Map.mem map key
+        then
+          horizontal map key data
+          || vertical map key data
+          || diagonal1 map key data
+          || diagonal2 map key data
+        else false)
+    in
+    if is_Win x_map
+    then Evaluation.Game_over { winner = Some Piece.X }
+    else if is_Win o_map
+    then Evaluation.Game_over { winner = Some Piece.O }
+    else Game_continues (* | _ -> Illegal_state *)
 ;;
 
 (* Exercise 3. *)
