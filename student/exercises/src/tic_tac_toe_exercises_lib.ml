@@ -55,6 +55,15 @@ let non_win =
   |> place_piece ~piece:Piece.O ~position:{ Position.row = 2; column = 0 }
 ;;
 
+let case_one =
+  empty_game
+  |> place_piece ~piece:Piece.X ~position:{ Position.row = 0; column = 0 }
+  |> place_piece ~piece:Piece.O ~position:{ Position.row = 2; column = 0 }
+  |> place_piece ~piece:Piece.X ~position:{ Position.row = 0; column = 2 }
+  |> place_piece ~piece:Piece.O ~position:{ Position.row = 1; column = 0 }
+  |> place_piece ~piece:Piece.O ~position:{ Position.row = 2; column = 2 }
+;;
+
 (* Exercise 1.
 
    For instructions on implemeting this refer to the README.
@@ -115,8 +124,11 @@ let evaluate ~(game_kind : Game_kind.t) ~(pieces : Piece.t Position.Map.t)
       | _, _ -> false
     in
     let diagonal1 map key data =
+      let up_left = Map.find map (Position.up (Position.left key)) in
+      let down_right =  Map.find map (Position.down (Position.right key)) in
+      print_s 
       match
-        ( Map.find map (Position.up (Position.left key))
+        (Map.find map (Position.up (Position.left key))
         , Map.find map (Position.down (Position.right key)) )
       with
       (*If both exists, check if equal, else continue checking*)
@@ -140,13 +152,22 @@ let evaluate ~(game_kind : Game_kind.t) ~(pieces : Piece.t Position.Map.t)
     in
     let is_Win map =
       Map.existsi map ~f:(fun ~key ~data ->
-        (*Find left and right positions*)
         if Map.mem map key
-        then
-          horizontal map key data
-          || vertical map key data
-          || diagonal1 map key data
-          || diagonal2 map key data
+        then (
+          let horizontal = horizontal map key data in
+          let vertical = vertical map key data in
+          let diagonal1 = diagonal1 map key data in
+          let diagonal2 = diagonal2 map key data in
+          print_s
+            [%message
+              ""
+                (key : Position.t)
+                (data : Piece.t)
+                (horizontal : bool)
+                (vertical : bool)
+                (diagonal1 : bool)
+                (diagonal2 : bool)];
+          horizontal || vertical || diagonal1 || diagonal2)
         else false)
     in
     if is_Win x_map
@@ -262,10 +283,14 @@ let winning_moves
   let moves = available_moves ~game_kind ~pieces in
   (*Iterate through list and modify map and see if anyone would win*)
   List.filter moves ~f:(fun move ->
-    match
+    print_endline (Position.to_string move);
+    let state =
       evaluate ~game_kind ~pieces:(Map.set pieces ~key:move ~data:me)
-    with
-    | Evaluation.Game_over { winner = Some _me } -> true
+    in
+    print_endline (Evaluation.to_string state);
+    match state with
+    | Evaluation.Game_over { winner = Some x } ->
+      if Piece.equal x me then true else false
     | _ -> false)
 ;;
 
@@ -384,8 +409,8 @@ let%expect_test "print_non_win" =
     O X |}]
 ;;
 
-(* After you've implemented [available_moves], uncomment these tests! *)
-(* let%expect_test "yes available_moves" = let (moves : Position.t list) =
+(* (*After you've implemented [available_moves], uncomment these tests! *)
+   let%expect_test "yes available_moves" = let (moves : Position.t list) =
    available_moves ~game_kind:non_win.game_kind ~pieces:non_win.pieces |>
    List.sort ~compare:Position.compare in print_s [%sexp (moves : Position.t
    list)]; [%expect {| (((row 0) (column 1)) ((row 0) (column 2)) ((row 1)
@@ -421,6 +446,22 @@ let%expect_test "winning_move" =
     winning_moves
       ~game_kind:non_win.game_kind
       ~pieces:non_win.pieces
+      ~me:Piece.O
+  in
+  print_s [%sexp (positions : Position.t list)];
+  [%expect {| () |}];
+  let positions =
+    winning_moves
+      ~game_kind:case_one.game_kind
+      ~pieces:case_one.pieces
+      ~me:Piece.X
+  in
+  print_s [%sexp (positions : Position.t list)];
+  [%expect {| () |}];
+  let positions =
+    winning_moves
+      ~game_kind:case_one.game_kind
+      ~pieces:case_one.pieces
       ~me:Piece.O
   in
   print_s [%sexp (positions : Position.t list)];
