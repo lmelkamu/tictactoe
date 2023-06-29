@@ -95,22 +95,46 @@ let score
   | _ -> 0.0
 ;;
 
-let rec minimax  
-~(me : Piece.t)
-~(game_kind : Game_kind.t)
-~(pieces : Piece.t Position.Map.t)
-~(scores: float list)
-~(depth:int)
-: float =
-match Tic_tac_toe_exercises_lib.evaluate ~game_kind ~pieces with
-| Tic_tac_toe_exercises_lib.Evaluation.Game_over { winner = Some _x } -> score ~me ~game_kind ~pieces
-| _ -> if depth = 0 then score ~me ~game_kind ~pieces
-else (let avail_moves = Tic_tac_toe_exercises_lib.available_moves ~game_kind ~pieces in
-  let new_scores = List.map avail_moves ~f:(fun position -> 
-  let new_pieces = Map.set pieces ~key:position ~data:me in
-  (minimax ~me ~game_kind ~pieces:new_pieces ~scores ~depth: (depth - 1))
-)) in 0.0
-;; 
+let rec minimax
+  ~(me : Piece.t)
+  ~(game_kind : Game_kind.t)
+  ~(pieces : Piece.t Position.Map.t)
+  ~(game_status : Game_status.t)
+  ~(scores : float list)
+  ~(depth : int)
+  : float
+  =
+  match Tic_tac_toe_exercises_lib.evaluate ~game_kind ~pieces with
+  | Tic_tac_toe_exercises_lib.Evaluation.Game_over { winner = Some _x } ->
+    score ~me ~game_kind ~pieces
+  | _ ->
+    if depth = 0
+    then score ~me ~game_kind ~pieces
+    else (
+      let avail_moves =
+        Tic_tac_toe_exercises_lib.available_moves ~game_kind ~pieces
+      in
+      let scores =
+        List.map avail_moves ~f:(fun position ->
+          let new_pieces = Map.set pieces ~key:position ~data:me in
+          minimax
+            ~me
+            ~game_kind
+            ~pieces:new_pieces
+            ~game_status
+            ~scores
+            ~depth:(depth - 1))
+      in
+      if Game_status.equal game_status (Game_status.Turn_of me)
+      then (
+        match List.max_elt scores ~compare:Float.compare with
+        | Some v -> v
+        | None -> failwith "fail")
+      else (
+        match List.min_elt scores ~compare:Float.compare with
+        | Some v -> v
+        | None -> failwith "fail"))
+;;
 
 (* [compute_next_move] is your Game AI's function.
 
