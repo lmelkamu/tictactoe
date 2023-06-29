@@ -72,8 +72,7 @@ let pick_winning_move_or_block_if_possible_strategy
     let losing_moves =
       Tic_tac_toe_exercises_lib.losing_moves ~me ~game_kind ~pieces
     in
-    print_endline (List.to_string ~f:Position.to_string losing_moves);
-    if not (List.is_empty losing_moves)
+    if List.is_empty losing_moves
     then List.random_element_exn moves
     else
       List.random_element_exn
@@ -90,13 +89,28 @@ let score
   ~(pieces : Piece.t Position.Map.t)
   : float
   =
-  ignore me;
-  ignore game_kind;
-  ignore pieces;
-  0.0
+  match Tic_tac_toe_exercises_lib.evaluate ~game_kind ~pieces with
+  | Tic_tac_toe_exercises_lib.Evaluation.Game_over { winner = Some x } ->
+    if Piece.equal x me then Float.infinity else Float.neg_infinity
+  | _ -> 0.0
 ;;
 
-let _ = score
+let rec minimax  
+~(me : Piece.t)
+~(game_kind : Game_kind.t)
+~(pieces : Piece.t Position.Map.t)
+~(scores: float list)
+~(depth:int)
+: float =
+match Tic_tac_toe_exercises_lib.evaluate ~game_kind ~pieces with
+| Tic_tac_toe_exercises_lib.Evaluation.Game_over { winner = Some _x } -> score ~me ~game_kind ~pieces
+| _ -> if depth = 0 then score ~me ~game_kind ~pieces
+else (let avail_moves = Tic_tac_toe_exercises_lib.available_moves ~game_kind ~pieces in
+  let new_scores = List.map avail_moves ~f:(fun position -> 
+  let new_pieces = Map.set pieces ~key:position ~data:me in
+  (minimax ~me ~game_kind ~pieces:new_pieces ~scores ~depth: (depth - 1))
+)) in 0.0
+;; 
 
 (* [compute_next_move] is your Game AI's function.
 
